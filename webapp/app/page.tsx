@@ -8,7 +8,7 @@ export default function Home() {
         <span className="text-3xl font-bold text-center text-red-500 sm:text-left">
           Welcome {" "}
           </span>
-          <Button variant="secondary">Connect</Button>
+          <Button variant="default">Connect</Button>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
