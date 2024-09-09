@@ -24,6 +24,7 @@ contract PaymentSystem {
         string message,
         uint256 timestamp
     );
+
     event PaymentRequested(
         address indexed from,
         address indexed to,
@@ -31,6 +32,7 @@ contract PaymentSystem {
         string message,
         uint256 timestamp
     );
+
     event UsernameSet(address indexed user, string username);
 
     function deposit() external payable {
