@@ -5,11 +5,12 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { Button } from './ui/button';
 import SetUsernameModal from './SetUsernameModal';
 import Modal from '@/components/ui/modal';
+import { useModal } from '@/contexts/ModalContext';
 
 const AccountInfo: React.FC = () => {
   const { account, balance, username } = useWeb3();
-  const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  const { openModal } = useModal();
   return (
     <div className="rounded-lg">
       <h2 className="text-xl font-semibold mb-4">Account Details</h2>
@@ -22,12 +23,9 @@ const AccountInfo: React.FC = () => {
       <p>
         User name: <p className="truncate max-w-[150px]">{username || 'Not set'}</p>
       </p>
-      <Button variant={'outline'} onClick={() => setActiveModal('setUsername')} className="w-full mt-4">
+      <Button variant={'outline'} onClick={() => openModal('setUsername')} className="w-full mt-4">
         Set Username
       </Button>
-      <Modal isOpen={activeModal === 'setUsername'} onClose={() => setActiveModal(null)} title="Set Username">
-        <SetUsernameModal onClose={() => setActiveModal(null)} />
-      </Modal>
     </div>
   );
 };

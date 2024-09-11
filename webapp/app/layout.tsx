@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { Inter } from 'next/font/google';
 import { Web3Provider } from '@/contexts/Web3Context';
+import { ModalProvider } from '@/contexts/ModalContext';
+import Header from '@/components/Header';
+import ModalContainer from '@/components/ModalContainer';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -26,7 +29,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased dark`}>
-        <Web3Provider>{children}</Web3Provider>
+        <Web3Provider>
+          <ModalProvider>
+            <Header />
+            <main className="container mx-auto px-4 py-8">{children}</main>
+            <ModalContainer />
+          </ModalProvider>
+        </Web3Provider>
       </body>
     </html>
   );

@@ -1,10 +1,9 @@
-'use client';
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
+import React, { useState, useEffect } from 'react';
+import { useWeb3 } from '@/contexts/Web3Context';
 import { ethers } from 'ethers';
+import { ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Transaction {
   sender: string;
@@ -18,11 +17,60 @@ interface Transaction {
   receiverUsername: string;
 }
 
+const TransactionCard: React.FC<{
+  tx: Transaction;
+  currentAccount: string | null;
+  onPayRequest: (tx: Transaction) => Promise<void>;
+}> = ({ tx, currentAccount, onPayRequest }) => {
+  const isIncoming = tx.receiver.toLowerCase() === currentAccount?.toLowerCase();
+  const icon =
+    tx.isRequest && !tx.isPaid ? (
+      <Clock className="w-6 h-6 text-yellow-500" />
+    ) : isIncoming ? (
+      <ArrowDownLeft className="w-6 h-6 text-green-500" />
+    ) : (
+      <ArrowUpRight className="w-6 h-6 text-red-500" />
+    );
+
+  const statusColor = tx.isPaid ? 'text-green-600' : 'text-yellow-600';
+  const amountColor = isIncoming ? 'text-green-600' : 'text-red-600';
+
+  return (
+    <div className="rounded-lg shadow-md p-4 mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          {icon}
+          <span className="ml-2 font-semibold">{tx.isRequest ? 'Request' : isIncoming ? 'Received' : 'Sent'}</span>
+        </div>
+        <span className={`font-bold ${amountColor}`}>
+          {isIncoming ? '+' : '-'}
+          {ethers.formatEther(tx.amount)} ETH
+        </span>
+      </div>
+      <p className="text-sm text-gray-600 mb-1">
+        {isIncoming ? 'From: ' : 'To: '}
+        {isIncoming ? tx.senderUsername || tx.sender : tx.receiverUsername || tx.receiver}
+      </p>
+      {tx.message && <p className="text-sm text-gray-600 mb-1">Message: {tx.message}</p>}
+      <div className="flex justify-between items-center text-xs text-gray-500">
+        <span>{new Date(Number(tx.timestamp) * 1000).toLocaleString()}</span>
+        <span className={statusColor}>{tx.isPaid ? 'Paid' : 'Pending'}</span>
+      </div>
+      {tx.isRequest && !tx.isPaid && isIncoming && (
+        <Button onClick={() => onPayRequest(tx)} className="mt-2 w-full">
+          Pay Request
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const TransactionHistory: React.FC = () => {
   const { contract, account } = useWeb3();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filter, setFilter] = useState<'all' | 'sent' | 'received' | 'requests'>('all');
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = async () => {
     if (contract) {
       try {
         const txs = await contract.getTransactions();
@@ -31,130 +79,68 @@ const TransactionHistory: React.FC = () => {
         console.error('Error fetching transactions:', error);
       }
     }
-  }, [contract]);
+  };
 
   useEffect(() => {
     fetchTransactions();
 
     // Set up event listeners
-    const onPaymentSent = (from: string, to: string, amount: bigint, message: string, timestamp: number) => {
-      console.log('New payment sent:', { from, to, amount, message, timestamp });
-      fetchTransactions();
-    };
-
-    const onPaymentRequested = (from: string, to: string, amount: bigint, message: string, timestamp: number) => {
-      console.log('New payment requested:', { from, to, amount, message, timestamp });
-      fetchTransactions();
-    };
-
-    const onRequestPaid = (requestIndex: number) => {
-      console.log('Request paid:', requestIndex);
-      fetchTransactions();
-    };
-
     if (contract) {
-      contract.on('PaymentSent', onPaymentSent);
-      contract.on('PaymentRequested', onPaymentRequested);
-      contract.on('RequestPaid', onRequestPaid);
+      contract.on('PaymentSent', fetchTransactions);
+      contract.on('RequestPaid', fetchTransactions);
     }
-
-    // Set up polling
-    // const pollInterval = setInterval(fetchTransactions, 30000); // Poll every 30 seconds
 
     // Cleanup function
     return () => {
       if (contract) {
-        contract.off('PaymentSent', onPaymentSent);
-        contract.off('PaymentRequested', onPaymentRequested);
-        contract.off('RequestPaid', onRequestPaid);
+        contract.off('PaymentSent', fetchTransactions);
+        contract.off('RequestPaid', fetchTransactions);
       }
-      // clearInterval(pollInterval);
     };
-  }, [contract, fetchTransactions]);
+  }, [contract]);
 
-  const handlePayRequest = async (tx: Transaction, index: number) => {
+  const handlePayRequest = async (tx: Transaction) => {
     if (contract && account) {
       try {
-        console.log('Attempting to pay request:', {
-          index,
-          to: tx.sender,
-          value: tx.amount.toString(),
-          message: tx.message,
-        });
-
-        const gasEstimate = await contract.payRequest.estimateGas(index, { value: tx.amount });
-        console.log('Estimated gas:', gasEstimate.toString());
-
-        // const gasLimit = gasEstimate.mul(120).div(100); // 20% buffer
-
-        const payTx = await contract.payRequest(index, {
-          value: tx.amount,
-          // gasLimit: gasLimit
-        });
-
-        console.log('Payment transaction sent:', payTx.hash);
-
-        const receipt = await payTx.wait();
-        console.log('Payment transaction confirmed, receipt:', receipt);
-
+        const payTx = await contract.payRequest(transactions.indexOf(tx), { value: tx.amount });
+        await payTx.wait();
         alert('Payment sent successfully!');
-
-        // Refresh transactions
-        fetchTransactions();
+        // Transactions will be automatically updated by the event listener
       } catch (error) {
-        console.error('Detailed error:', error);
-        if (error.error && error.error.message) {
-          console.error('Error message:', error.error.message);
-        }
-        if (error.transaction) {
-          console.error('Failed transaction details:', error.transaction);
-        }
+        console.error('Error paying request:', error);
         alert(`Failed to pay request: ${error.message}`);
       }
     }
   };
 
+  const filteredTransactions = transactions.filter((tx) => {
+    if (filter === 'all') return true;
+    if (filter === 'sent') return tx.sender.toLowerCase() === account?.toLowerCase() && !tx.isRequest;
+    if (filter === 'received') return tx.receiver.toLowerCase() === account?.toLowerCase() && !tx.isRequest;
+    if (filter === 'requests') return tx.isRequest;
+    return true;
+  });
+
   return (
-    <div className="rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Transaction History</h2>
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-primary">
-            <TableHead>Type</TableHead>
-            <TableHead>From</TableHead>
-            <TableHead>To</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Message</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((tx, index) => (
-            <TableRow key={index} className="hover:bg-primary/10 border-primary">
-              <TableCell>{tx.isRequest ? 'Request' : 'Payment'}</TableCell>
-              <TableCell className="truncate max-w-[100px]">{tx.senderUsername || tx.sender}</TableCell>
-              <TableCell className="truncate max-w-[100px]">{tx.receiverUsername || tx.receiver}</TableCell>
-              <TableCell>{ethers.formatEther(tx.amount)} ETH</TableCell>
-              <TableCell className="truncate max-w-[200px]">{tx.message}</TableCell>
-              <TableCell>{tx.isPaid ? 'Paid' : 'Pending'}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {/* <ul>
-        {transactions.map((tx, index) => (
-          <li key={index} className="mb-4 p-4 border rounded">
-            <p>{tx.isRequest ? 'Request' : 'Payment'} from {tx.senderUsername || tx.sender} to {tx.receiverUsername || tx.receiver}</p>
-            <p>Amount: {ethers.formatEther(tx.amount)} ETH</p>
-            <p>Message: {tx.message}</p>
-            <p>Time: {new Date(Number(tx.timestamp) * 1000).toLocaleString()}</p>
-            <p>Status: {tx.isPaid ? 'Paid' : 'Unpaid'}</p>
-            {tx.isRequest && !tx.isPaid && tx.receiver === account && (
-              <Button onClick={() => handlePayRequest(tx, index)} className="mt-2">Pay Request</Button>
-            )}
-          </li>
-        ))}
-      </ul> */}
+    <div>
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Transaction History</h2>
+
+        <Select value={filter} onValueChange={setFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Transaction History" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+            <SelectItem value="received">Received</SelectItem>
+            <SelectItem value="requests">Requests</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {filteredTransactions.map((tx, index) => (
+        <TransactionCard key={index} tx={tx} currentAccount={account} onPayRequest={handlePayRequest} />
+      ))}
     </div>
   );
 };

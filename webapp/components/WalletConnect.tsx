@@ -11,7 +11,7 @@ const WalletConnect: React.FC = () => {
     <div>
       {account ? (
         <div className="flex items-center space-x-4">
-          <p className="text-sm text-gray-700 truncate max-w-[70px]">{account}</p>
+          <p className="text-sm text-gray-700 truncate max-w-[70px] leading-6">{account}</p>
           <Button onClick={disconnectWallet} variant="outline" className="">
             Disconnect
           </Button>

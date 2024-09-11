@@ -80,7 +80,7 @@
     --destructive-foreground: 272 5% 90%;
     --border: 272 30% 50%;
     --input: 272 30% 18%;
-    --ring: 272 88% 58%;
+    /* --ring: 272 88% 58%; */
     --radius: 0.5rem;
   }
 
@@ -103,7 +103,7 @@
     --destructive-foreground: 272 5% 90%;
     --border: 272 30% 18%;
     --input: 272 30% 18%;
-    --ring: 272 88% 58%;
+    /* --ring: 272 88% 58%; */
     --radius: 0.5rem;
   }
 }
