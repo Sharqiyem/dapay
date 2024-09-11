@@ -9,7 +9,7 @@ interface SetUsernameModalProps {
 
 const SetUsernameModal: React.FC<SetUsernameModalProps> = ({ onClose }) => {
   const { setUsername, username: currentUsername } = useWeb3();
-  console.log("🚀 ~ currentUsername:", currentUsername)
+  console.log('🚀 ~ currentUsername:', currentUsername);
   const [newUsername, setNewUsername] = useState(currentUsername || '');
 
   const handleSetUsername = async () => {
@@ -25,11 +25,7 @@ const SetUsernameModal: React.FC<SetUsernameModalProps> = ({ onClose }) => {
 
   return (
     <div className="space-y-4">
-      <Input
-        value={newUsername}
-        onChange={(e) => setNewUsername(e.target.value)}
-        placeholder="Enter username"
-      />
+      <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Enter username" />
       <Button onClick={handleSetUsername}>Set Username</Button>
     </div>
   );

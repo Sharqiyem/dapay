@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
 import { useWeb3 } from '@/contexts/Web3Context';
@@ -23,50 +23,40 @@ const Home: React.FC = () => {
           <WalletConnect />
         </div>
       </header>
-      { account ? <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6">
-        <div className="space-y-4">
-          <div className=" shadow rounded-lg p-6">
-          <AccountInfo />                          
-          </div>
-          {account && (
+      {account ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6">
+          <div className="space-y-4">
             <div className=" shadow rounded-lg p-6">
-               <div className="space-y-2">
-               
-                <Button onClick={() => setActiveModal('sendPayment')} className="w-full">
-                <CircleDollarSignIcon size={16} className="mr-2" />  Send Payment
-                </Button>
-                <Button onClick={() => setActiveModal('requestPayment')} className="w-full">
-                <ArrowLeftRight size={16} className="mr-2" />  Request Payment
-                </Button>
-              </div>
+              <AccountInfo />
             </div>
-          )}
+            {account && (
+              <div className=" shadow rounded-lg p-6">
+                <div className="space-y-2">
+                  <Button onClick={() => setActiveModal('sendPayment')} className="w-full">
+                    <CircleDollarSignIcon size={16} className="mr-2" /> Send Payment
+                  </Button>
+                  <Button onClick={() => setActiveModal('requestPayment')} className="w-full">
+                    <ArrowLeftRight size={16} className="mr-2" /> Request Payment
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className=" shadow rounded-lg p-6 col-span-2">
+            <TransactionHistory />
+          </div>
         </div>
-       <div className=" shadow rounded-lg p-6 col-span-2">
-          <TransactionHistory />
-        </div> 
-      </div>: (<div className="flex justify-center   h-screen">
-        
+      ) : (
+        <div className="flex justify-center   h-screen">
+          <p> Connect your wallet to continue</p>
+        </div>
+      )}
 
-        <p> Connect your wallet to continue</p>
-        </div>)
-        }
-
-    
-
-      <Modal
-        isOpen={activeModal === 'sendPayment'}
-        onClose={() => setActiveModal(null)}
-        title="Send Payment"
-      >
+      <Modal isOpen={activeModal === 'sendPayment'} onClose={() => setActiveModal(null)} title="Send Payment">
         <SendPaymentModal onClose={() => setActiveModal(null)} />
       </Modal>
 
-      <Modal
-        isOpen={activeModal === 'requestPayment'}
-        onClose={() => setActiveModal(null)}
-        title="Request Payment"
-      >
+      <Modal isOpen={activeModal === 'requestPayment'} onClose={() => setActiveModal(null)} title="Request Payment">
         <RequestPaymentModal onClose={() => setActiveModal(null)} />
       </Modal>
     </div>

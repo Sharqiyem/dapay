@@ -1,17 +1,10 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Transaction {
   sender: string;
@@ -86,7 +79,7 @@ const TransactionHistory: React.FC = () => {
           index,
           to: tx.sender,
           value: tx.amount.toString(),
-          message: tx.message
+          message: tx.message,
         });
 
         const gasEstimate = await contract.payRequest.estimateGas(index, { value: tx.amount });
@@ -94,18 +87,18 @@ const TransactionHistory: React.FC = () => {
 
         // const gasLimit = gasEstimate.mul(120).div(100); // 20% buffer
 
-        const payTx = await contract.payRequest(index, { 
+        const payTx = await contract.payRequest(index, {
           value: tx.amount,
           // gasLimit: gasLimit
         });
 
         console.log('Payment transaction sent:', payTx.hash);
-        
+
         const receipt = await payTx.wait();
         console.log('Payment transaction confirmed, receipt:', receipt);
 
         alert('Payment sent successfully!');
-        
+
         // Refresh transactions
         fetchTransactions();
       } catch (error) {
@@ -126,7 +119,7 @@ const TransactionHistory: React.FC = () => {
       <h2 className="text-2xl font-semibold mb-4">Transaction History</h2>
       <Table>
         <TableHeader>
-          <TableRow className='hover:bg-transparent border-primary'>
+          <TableRow className="hover:bg-transparent border-primary">
             <TableHead>Type</TableHead>
             <TableHead>From</TableHead>
             <TableHead>To</TableHead>
@@ -137,12 +130,12 @@ const TransactionHistory: React.FC = () => {
         </TableHeader>
         <TableBody>
           {transactions.map((tx, index) => (
-            <TableRow key={index} className='hover:bg-primary/10 border-primary'>
+            <TableRow key={index} className="hover:bg-primary/10 border-primary">
               <TableCell>{tx.isRequest ? 'Request' : 'Payment'}</TableCell>
-              <TableCell className='truncate max-w-[100px]'>{tx.senderUsername || tx.sender}</TableCell>
-              <TableCell className='truncate max-w-[100px]'>{tx.receiverUsername || tx.receiver}</TableCell>
+              <TableCell className="truncate max-w-[100px]">{tx.senderUsername || tx.sender}</TableCell>
+              <TableCell className="truncate max-w-[100px]">{tx.receiverUsername || tx.receiver}</TableCell>
               <TableCell>{ethers.formatEther(tx.amount)} ETH</TableCell>
-              <TableCell className='truncate max-w-[200px]'>{tx.message}</TableCell>
+              <TableCell className="truncate max-w-[200px]">{tx.message}</TableCell>
               <TableCell>{tx.isPaid ? 'Paid' : 'Pending'}</TableCell>
             </TableRow>
           ))}

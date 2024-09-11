@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../contexts/Web3Context';
@@ -54,21 +54,21 @@ const SendPayment: React.FC = () => {
 
     try {
       const amountInWei = ethers.parseEther(amount);
-      
+
       console.log('Sending payment:', {
         to,
         amount: amountInWei.toString(),
-        message
+        message,
       });
 
       const tx = await contract.sendPayment(to, message, { value: amountInWei });
       console.log('Transaction sent:', tx.hash);
-      
+
       const receipt = await tx.wait();
       console.log('Transaction confirmed in block:', receipt.blockNumber);
 
       alert('Payment sent successfully!');
-      
+
       // Clear form
       setTo('');
       setAmount('');
@@ -104,8 +104,8 @@ const SendPayment: React.FC = () => {
         placeholder="Message (optional, max 280 characters)"
         maxLength={280}
       />
-      <Button 
-        onClick={handleSendPayment} 
+      <Button
+        onClick={handleSendPayment}
         disabled={!isAddressValid || !validateAmount(amount) || !validateMessage(message) || isLoading}
       >
         {isLoading ? 'Sending Payment...' : 'Send Payment'}

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
@@ -12,7 +12,9 @@ interface Web3ContextType {
   contract: ethers.Contract | null;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
-  subscribeToPaymentSent: (callback: (from: string, to: string, amount: bigint, message: string, timestamp: bigint) => void) => () => void;
+  subscribeToPaymentSent: (
+    callback: (from: string, to: string, amount: bigint, message: string, timestamp: bigint) => void,
+  ) => () => void;
   username: string | null;
   setUsername: (newUsername: string) => Promise<void>;
 }
@@ -39,9 +41,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         const balance = await provider.getBalance(address);
         setBalance(ethers.formatEther(balance));
         const paymentSystem = new ethers.Contract(contractAddress, PaymentSystemABI.abi, signer);
-        console.log("🚀 ~ connectWal ~ paymentSystem:", paymentSystem)
-        
-        setContract(paymentSystem); 
+        console.log('🚀 ~ connectWal ~ paymentSystem:', paymentSystem);
+
+        setContract(paymentSystem);
 
         // Fetch username
         const username = await paymentSystem.getUsername(address);
@@ -76,7 +78,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const subscribeToPaymentSent = (callback: (from: string, to: string, amount: bigint, message: string, timestamp: bigint) => void) => {
+  const subscribeToPaymentSent = (
+    callback: (from: string, to: string, amount: bigint, message: string, timestamp: bigint) => void,
+  ) => {
     if (!contract) return () => {};
 
     const filter = contract.filters.PaymentSent();
@@ -91,47 +95,50 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       contract.off(filter, listener);
     };
   };
-  
+
   useEffect(() => {
+    const autoConnect = async () => {
+      await connectWallet();
+    };
 
-    
-      const autoConnect = async () => {
-          await connectWallet();         
-      };
-  
-      autoConnect();
-  
-      if (window.ethereum) {
-        window.ethereum.on('accountsChanged', (accounts: string[]) => {
-          if (accounts.length > 0) {
-            connectWallet();
-          } else {
-            disconnectWallet();
-          }
-        });
-  
-        window.ethereum.on('chainChanged', () => {
-          window.location.reload();
-        });
-      }
-  
-    
+    autoConnect();
 
-      return () => {
-        if (window.ethereum) {
-          window.ethereum.removeAllListeners('accountsChanged');
-          window.ethereum.removeAllListeners('chainChanged');
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        if (accounts.length > 0) {
+          connectWallet();
+        } else {
+          disconnectWallet();
         }
-      };
-   
+      });
 
-    
-      
+      window.ethereum.on('chainChanged', () => {
+        window.location.reload();
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeAllListeners('accountsChanged');
+        window.ethereum.removeAllListeners('chainChanged');
+      }
+    };
   }, []);
 
   return (
-    <Web3Context.Provider value={{ account, balance, contract, signer, connectWallet, disconnectWallet, subscribeToPaymentSent,  username, 
-      setUsername  }}>
+    <Web3Context.Provider
+      value={{
+        account,
+        balance,
+        contract,
+        signer,
+        connectWallet,
+        disconnectWallet,
+        subscribeToPaymentSent,
+        username,
+        setUsername,
+      }}
+    >
       {children}
     </Web3Context.Provider>
   );

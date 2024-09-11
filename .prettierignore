@@ -1,0 +1,9 @@
+# Add files here to ignore them from prettier formatting
+.next
+dist/
+node_modules
+.husky
+coverage
+.prettierignore
+.stylelintignore
+.eslintignore
