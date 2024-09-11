@@ -8,16 +8,16 @@ contract PaymentSystem {
         uint256 amount;
         string message;
         uint256 timestamp;
-        bool isRequest;
         string senderUsername;
         string receiverUsername;
+        bool isRequest;
+        bool isPaid;
     }
 
-    mapping(address => uint256) private balances;
     mapping(address => string) private usernames;
     Transaction[] public transactions;
 
-    event PaymentMade(
+    event PaymentSent(
         address indexed from,
         address indexed to,
         uint256 amount,
@@ -33,18 +33,9 @@ contract PaymentSystem {
         uint256 timestamp
     );
 
+    event RequestPaid(uint256 indexed requestIndex);
+
     event UsernameSet(address indexed user, string username);
-
-    function deposit() external payable {
-        require(msg.value > 0, "Deposit amount must be greater than zero");
-        balances[msg.sender] += msg.value;
-    }
-
-    function withdraw(uint256 amount) external {
-        require(amount <= balances[msg.sender], "Insufficient balance");
-        balances[msg.sender] -= amount;
-        payable(msg.sender).transfer(amount);
-    }
 
     function setUsername(string calldata username) external {
         usernames[msg.sender] = username;
@@ -58,64 +49,95 @@ contract PaymentSystem {
     }
 
     function sendPayment(
-        address to,
-        uint256 amount,
+        address payable to,
         string calldata message
-    ) external {
-        require(amount <= balances[msg.sender], "Insufficient balance");
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
+    ) external payable {
+        require(msg.value > 0, "Amount must be greater than zero");
+        require(to != address(0), "Invalid recipient address");
 
-        string memory senderUsername = usernames[msg.sender];
-        string memory receiverUsername = usernames[to];
+        // Transfer the ETH directly to the recipient
+        (bool sent, ) = to.call{value: msg.value}("");
+        require(sent, "Failed to send ETH");
 
+        // Record the transaction
         transactions.push(
             Transaction({
                 sender: msg.sender,
                 receiver: to,
-                amount: amount,
+                amount: msg.value,
                 message: message,
                 timestamp: block.timestamp,
+                senderUsername: usernames[msg.sender],
+                receiverUsername: usernames[to],
                 isRequest: false,
-                senderUsername: senderUsername,
-                receiverUsername: receiverUsername
+                isPaid: true
             })
         );
 
-        emit PaymentMade(msg.sender, to, amount, message, block.timestamp);
+        emit PaymentSent(msg.sender, to, msg.value, message, block.timestamp);
     }
 
     function requestPayment(
-        address to,
+        address from,
         uint256 amount,
         string calldata message
     ) external {
-        require(amount > 0, "Request amount must be greater than zero");
+        require(amount > 0, "Amount must be greater than zero");
+        require(from != address(0), "Invalid recipient address");
+        require(from != msg.sender, "Cannot request payment from yourself");
+        require(bytes(message).length <= 280, "Message too long"); // Limit message length
 
-        string memory senderUsername = usernames[msg.sender];
-        string memory receiverUsername = usernames[to];
-
+        // Record the payment request
         transactions.push(
             Transaction({
                 sender: msg.sender,
-                receiver: to,
+                receiver: from,
                 amount: amount,
                 message: message,
                 timestamp: block.timestamp,
+                senderUsername: usernames[msg.sender],
+                receiverUsername: usernames[from],
                 isRequest: true,
-                senderUsername: senderUsername,
-                receiverUsername: receiverUsername
+                isPaid: false
             })
         );
 
-        emit PaymentRequested(msg.sender, to, amount, message, block.timestamp);
+        emit PaymentRequested(
+            msg.sender,
+            from,
+            amount,
+            message,
+            block.timestamp
+        );
+    }
+
+    function payRequest(uint256 requestIndex) external payable {
+        require(requestIndex < transactions.length, "Invalid request index");
+        Transaction storage request = transactions[requestIndex];
+        require(request.isRequest, "Not a payment request");
+        require(!request.isPaid, "Request already paid");
+        require(
+            msg.sender == request.receiver,
+            "Only the recipient can pay this request"
+        );
+        require(msg.value == request.amount, "Incorrect payment amount");
+
+        (bool sent, ) = request.sender.call{value: msg.value}("");
+        require(sent, "Failed to send ETH");
+
+        request.isPaid = true;
+
+        emit PaymentSent(
+            msg.sender,
+            request.sender,
+            msg.value,
+            request.message,
+            block.timestamp
+        );
+        emit RequestPaid(requestIndex);
     }
 
     function getTransactions() external view returns (Transaction[] memory) {
         return transactions;
-    }
-
-    function getBalance(address account) external view returns (uint256) {
-        return balances[account];
     }
 }

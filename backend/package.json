@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "compile": "hardhat compile",
-    "node": "hardhat node",
+    "h:node": "hardhat node",
     "clean": "hardhat clean",
     "test": "hardhat test",
     "deploy": "npx hardhat run scripts/deploy.js --network localhost"
