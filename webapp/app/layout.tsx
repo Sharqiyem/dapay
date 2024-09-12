@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased dark`}>
+      <body className={`${inter.className} ${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Web3Provider>
           <ModalProvider>
             <Header />

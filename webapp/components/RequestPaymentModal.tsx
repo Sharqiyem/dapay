@@ -11,33 +11,87 @@ interface RequestPaymentModalProps {
 }
 
 const RequestPaymentModal: React.FC<RequestPaymentModalProps> = ({ onClose }) => {
-  const { contract } = useWeb3();
-  const [from, setFrom] = useState('');
+  const { contract, account } = useWeb3();
+  const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isAddressValid, setIsAddressValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validateAmount = (value: string) => {
+    return parseFloat(value) > 0;
+  };
+
+  const validateMessage = (value: string) => {
+    return value.length <= 280; // Limit message to 280 characters
+  };
 
   const handleRequestPayment = async () => {
-    if (!contract) return;
+    if (!contract || !account) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    if (!isAddressValid) {
+      alert('Please enter a valid Ethereum address');
+      return;
+    }
+
+    if (!validateAmount(amount)) {
+      alert('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    if (!validateMessage(message)) {
+      alert('Message is too long. Please limit it to 280 characters.');
+      return;
+    }
+
+    if (ethers.getAddress(to).toLowerCase() === account.toLowerCase()) {
+      alert('You cannot request payment from yourself');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
       const amountInWei = ethers.parseEther(amount);
-      const tx = await contract.requestPayment(from, amountInWei, message);
-      await tx.wait();
+
+      console.log('Requesting payment:', {
+        from: to,
+        amount: amountInWei.toString(),
+        message,
+      });
+
+      const tx = await contract.requestPayment(to, amountInWei, message);
+      console.log('Transaction sent:', tx.hash);
+
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed in block:', receipt.blockNumber);
+
       alert('Payment request sent successfully!');
       onClose();
+
+      // Clear form
+      setTo('');
+      setAmount('');
+      setMessage('');
     } catch (error) {
       console.error('Error requesting payment:', error);
-      alert('Failed to request payment');
+      alert(`Failed to request payment: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-4">
+      <h2 className="text-2xl font-semibold">Request Payment</h2>
       <AddressInput
-        value={from}
-        onChange={(e) => setFrom(e.target.value)}
+        value={to}
+        onChange={(e) => setTo(e.target.value)}
         onValidChange={setIsAddressValid}
-        placeholder="Payer address"
+        placeholder="Recipient address"
       />
       <Input
         type="number"
@@ -53,8 +107,11 @@ const RequestPaymentModal: React.FC<RequestPaymentModalProps> = ({ onClose }) =>
         placeholder="Message (optional, max 280 characters)"
         maxLength={280}
       />
-      <Button onClick={handleRequestPayment} disabled={!isAddressValid || !amount}>
-        Request Payment
+      <Button
+        onClick={handleRequestPayment}
+        disabled={!isAddressValid || !validateAmount(amount) || !validateMessage(message) || isLoading}
+      >
+        {isLoading ? 'Sending Request...' : 'Request Payment'}
       </Button>
     </div>
   );

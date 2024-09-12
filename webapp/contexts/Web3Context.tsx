@@ -17,6 +17,7 @@ interface Web3ContextType {
   ) => () => void;
   username: string | null;
   setUsername: (newUsername: string) => Promise<void>;
+  feePercentage: number | null;
 }
 
 const Web3Context = createContext<Web3ContextType | null>(null);
@@ -27,6 +28,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [username, setUsernameState] = useState<string | null>(null);
+  const [feePercentage, setFeePercentage] = useState<number | null>(null);
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -48,6 +50,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fetch username
         const username = await paymentSystem.getUsername(address);
         setUsernameState(username);
+
+        // Fetch fee percentage
+        await fetchFeePercentage(paymentSystem);
       } catch (error) {
         console.error('Failed to connect wallet:', error);
       }
@@ -62,6 +67,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     setContract(null);
     setSigner(null);
     setUsernameState(null);
+    setFeePercentage(null);
   };
 
   const setUsername = async (newUsername: string) => {
@@ -95,6 +101,45 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       contract.off(filter, listener);
     };
   };
+
+  const fetchFeePercentage = async (contract: ethers.Contract) => {
+    try {
+      // Check if the feePercentage function exists
+      if (contract.feePercentage) {
+        const fee = await contract.feePercentage();
+        setFeePercentage(Number(fee) / 100); // Convert basis points to percentage
+      } else {
+        console.warn('feePercentage function not found in the contract');
+        setFeePercentage(null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch fee percentage:', error);
+      setFeePercentage(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!contract) return;
+
+    fetchFeePercentage(contract);
+
+    // Set up event listener for fee changes if the event exists
+    if (contract.filters.FeePercentageUpdated) {
+      contract.on('FeePercentageUpdated', (newFee) => {
+        setFeePercentage(Number(newFee) / 100);
+      });
+
+      return () => {
+        contract.removeAllListeners('FeePercentageUpdated');
+      };
+    }
+
+    return () => {
+      if (contract) {
+        contract.removeAllListeners('FeePercentageUpdated');
+      }
+    };
+  }, [contract]);
 
   useEffect(() => {
     const autoConnect = async () => {
@@ -137,6 +182,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         subscribeToPaymentSent,
         username,
         setUsername,
+        feePercentage,
       }}
     >
       {children}

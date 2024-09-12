@@ -1,38 +1,66 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const hre = require('hardhat');
 
 async function main() {
-  const PaymentSystem = await hre.ethers.getContractFactory('PaymentSystem');
-  const paymentSystem = await PaymentSystem.deploy();
+  try {
+    const initialFeePercentage = 100; // 1% fee, adjust as needed
 
-  const contractAddress = await paymentSystem.getAddress();
+    const PaymentSystem = await hre.ethers.getContractFactory('PaymentSystem');
+    const paymentSystem = await PaymentSystem.deploy(initialFeePercentage);
 
-  console.log('PaymentSystem deployed to:', contractAddress);
+    await paymentSystem.waitForDeployment();
+    const contractAddress = await paymentSystem.getAddress();
 
-  const frontendContractFile = path.join(__dirname, '../../webapp/constants/contract.ts');
+    console.log('PaymentSystem deployed to:', contractAddress);
+    console.log('Initial fee percentage:', initialFeePercentage / 100, '%');
 
-  // Read the current content of the file
-  let content = fs.readFileSync(frontendContractFile, 'utf8');
+    const frontendContractFile = path.join(__dirname, '../../webapp/constants/contract.ts');
+    console.log('Attempting to update file:', frontendContractFile);
 
-  // Replace the contract address
-  content = content.replace(
-    /export const contractAddress = ".*"/,
-    `export const contractAddress = "${contractAddress}"`,
-  );
+    // Read the current content of the file
+    let content = await fs.readFile(frontendContractFile, 'utf8');
+    console.log('File content read successfully');
 
-  // Write the updated content back to the file
-  fs.writeFileSync(frontendContractFile, content);
+    // Replace the contract address
+    const oldContent = content;
+    content = content.replace(
+      /export const contractAddress = '.*'/,
+      `export const contractAddress = "${contractAddress}"`,
+    );
+    console.log('content', content);
 
-  console.log(`Contract address updated in ${frontendContractFile}`);
+    // Add or update the initial fee percentage
+    if (content.includes('export const initialFeePercentage')) {
+      content = content.replace(
+        /export const initialFeePercentage = .*/,
+        `export const initialFeePercentage = ${initialFeePercentage}`,
+      );
+    } else {
+      content += `\nexport const initialFeePercentage = ${initialFeePercentage};\n`;
+    }
 
-  // Copy the ABI
-  const sourcePath = path.join(__dirname, '../artifacts/contracts');
-  const destPath = path.join(__dirname, '../../webapp/constants/artifacts');
+    // Only write to the file if changes were made
+    if (content !== oldContent) {
+      // Write the updated content back to the file
+      console.log('content', content);
 
-  fs.cpSync(sourcePath, destPath, { recursive: true });
+      await fs.writeFile(frontendContractFile, content);
+      console.log(`Contract address and initial fee percentage updated in ${frontendContractFile}`);
+    } else {
+      console.log('No changes were necessary in the frontend contract file');
+    }
 
-  console.log(`Artifacts copied to ${destPath}`);
+    // Copy the ABI
+    const sourcePath = path.join(__dirname, '../artifacts/contracts');
+    const destPath = path.join(__dirname, '../../webapp/constants/artifacts');
+
+    await fs.cp(sourcePath, destPath, { recursive: true });
+    console.log(`Artifacts copied to ${destPath}`);
+  } catch (error) {
+    console.error('An error occurred during deployment or file update:', error);
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {
