@@ -11,14 +11,18 @@ const WalletConnect: React.FC = () => {
   return (
     <div>
       {account ? (
-        <div className="flex items-center space-x-4">
-          <p className="text-sm text-gray-700 truncate max-w-[100px] leading-6">{formatAddress(account)}</p>
+        <div className="flex items-center gap-2">
+          <p className="order-last md:order-first text-sm text-gray-700 truncate max-w-[100px] leading-6">
+            {formatAddress(account)}
+          </p>
           <Button onClick={disconnectWallet} variant="outline" className="">
             Disconnect
           </Button>
         </div>
       ) : (
-        <Button onClick={connectWallet}>Connect Wallet</Button>
+        <Button size={'sm'} onClick={connectWallet}>
+          Connect Wallet
+        </Button>
       )}
     </div>
   );

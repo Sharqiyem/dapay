@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { ArrowUpRight, ArrowDownLeft, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatAddress } from '@/lib/utils';
 
 interface Transaction {
   sender: string;
@@ -49,7 +50,7 @@ const TransactionCard: React.FC<{
       </div>
       <p className="text-sm text-gray-600 mb-1">
         {isIncoming ? 'From: ' : 'To: '}
-        {isIncoming ? tx.senderUsername || tx.sender : tx.receiverUsername || tx.receiver}
+        {isIncoming ? tx.senderUsername || formatAddress(tx.sender) : tx.receiverUsername || formatAddress(tx.receiver)}
       </p>
       {tx.message && <p className="text-sm text-gray-600 mb-1">Message: {tx.message}</p>}
       <div className="flex justify-between items-center text-xs text-gray-500">
@@ -122,6 +123,14 @@ const TransactionHistory: React.FC = () => {
     if (filter === 'requests') return tx.isRequest;
     return true;
   });
+
+  if (!account) {
+    return (
+      <div className="flex justify-center h-screen text-center">
+        Please connect your wallet to view your transaction history.
+      </div>
+    );
+  }
 
   return (
     <div>

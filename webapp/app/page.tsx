@@ -16,7 +16,7 @@ const Home: React.FC = () => {
   return (
     <div>
       {account ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 space-y-4">
           <div className="space-y-4">
             <div className=" shadow rounded-lg p-6 space-y-2">
               <AccountInfo />
@@ -28,7 +28,7 @@ const Home: React.FC = () => {
                   <Button onClick={() => openModal('sendPayment')} className="w-full">
                     <CircleDollarSignIcon size={16} className="mr-2" /> Send Payment
                   </Button>
-                  <Button onClick={() => openModal('requestPayment')} className="w-full">
+                  <Button onClick={() => openModal('requestPayment')} className="w-full" variant="outline">
                     <ArrowLeftRight size={16} className="mr-2" /> Request Payment
                   </Button>
                 </div>
@@ -40,7 +40,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex justify-center   h-screen">
+        <div className="flex justify-center h-screen">
           <p> Connect your wallet to continue</p>
         </div>
       )}
