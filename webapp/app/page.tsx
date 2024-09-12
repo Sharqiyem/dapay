@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import AccountInfo from '@/components/AccountInfo';
 import { ArrowLeftRight, CircleDollarSignIcon } from 'lucide-react';
 import { useModal } from '@/contexts/ModalContext';
+import CollectedFees from '@/components/CollectedFees';
 
 const Home: React.FC = () => {
   const { account } = useWeb3();
@@ -17,8 +18,9 @@ const Home: React.FC = () => {
       {account ? (
         <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6">
           <div className="space-y-4">
-            <div className=" shadow rounded-lg p-6">
+            <div className=" shadow rounded-lg p-6 space-y-2">
               <AccountInfo />
+              {account && <CollectedFees />}
             </div>
             {account && (
               <div className=" shadow rounded-lg p-6">

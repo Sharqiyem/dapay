@@ -87,6 +87,7 @@ const TransactionHistory: React.FC = () => {
     // Set up event listeners
     if (contract) {
       contract.on('PaymentSent', fetchTransactions);
+      contract.on('PaymentRequested', fetchTransactions);
       contract.on('RequestPaid', fetchTransactions);
     }
 
@@ -95,6 +96,7 @@ const TransactionHistory: React.FC = () => {
       if (contract) {
         contract.off('PaymentSent', fetchTransactions);
         contract.off('RequestPaid', fetchTransactions);
+        contract.off('PaymentRequested', fetchTransactions);
       }
     };
   }, [contract]);

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { Button } from './ui/button';
+import { formatAddress } from '@/lib/utils';
 
 const WalletConnect: React.FC = () => {
   const { account, connectWallet, disconnectWallet } = useWeb3();
@@ -11,7 +12,7 @@ const WalletConnect: React.FC = () => {
     <div>
       {account ? (
         <div className="flex items-center space-x-4">
-          <p className="text-sm text-gray-700 truncate max-w-[70px] leading-6">{account}</p>
+          <p className="text-sm text-gray-700 truncate max-w-[100px] leading-6">{formatAddress(account)}</p>
           <Button onClick={disconnectWallet} variant="outline" className="">
             Disconnect
           </Button>
