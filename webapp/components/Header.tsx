@@ -9,7 +9,9 @@ import { useModal } from '@/contexts/ModalContext';
 import ThemeToggle from './ThemeToggle';
 import Image from 'next/image';
 import logo from '../images/logo4.png';
+import Logo2 from '../images/logo.svg';
 import { useWeb3 } from '@/contexts/Web3Context';
+import Logo from './Logo';
 
 const Header: React.FC = () => {
   const pathname = usePathname();
@@ -24,8 +26,16 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto py-4 sm:py-6 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/">
-            <Image src={logo} alt="DaPay" width={128} height={56} className="w-32 h-14" />
+            <Image
+              src={logo}
+              alt="DaPay"
+              width={128}
+              height={56}
+              className="w-32 h-14 fill-primary"
+              objectFit="contain"
+            />
             {/* <h1 className="text-2xl sm:text-3xl font-bold text-primary/80 cursor-pointer">DaPay</h1> */}
+            <Logo />
           </Link>
         </div>
 
