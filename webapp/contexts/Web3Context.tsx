@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import PaymentSystemABI from '@/constants/artifacts/PaymentSystem.sol/PaymentSystem.json';
-import { contractAddress } from '@/constants/contract';
+import { CONTRACT_ADDRESSES } from '@/constants/contract';
+import { NETWORKS } from '@/constants/networks';
 
 interface Web3ContextType {
   account: string | null;
@@ -21,6 +22,9 @@ interface Web3ContextType {
   isOwner: boolean;
   collectedFees: string | null;
   fetchCollectedFees: () => Promise<void>;
+  selectedNetwork: string;
+  setSelectedNetwork: (network: string) => void;
+  switchNetwork: (networkName: string) => Promise<void>;
 }
 
 const Web3Context = createContext<Web3ContextType | null>(null);
@@ -35,7 +39,63 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [collectedFees, setCollectedFees] = useState<string | null>(null);
 
-  const [provider, setProvider] = useState<ethers.Provider | null>(null);
+  const [, setProvider] = useState<ethers.Provider | null>(null);
+
+  const [selectedNetwork, setSelectedNetwork] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedNetwork') || 'hardhat';
+    }
+    return Object.keys(NETWORKS)[0];
+  });
+
+  const switchNetwork = async (networkName: string) => {
+    if (typeof window.ethereum !== 'undefined') {
+      const network = NETWORKS[networkName];
+      if (!network) {
+        console.error('Network configuration not found');
+        return;
+      }
+
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: network.chainId }],
+        });
+
+        // Update the selected network in state and localStorage
+        setSelectedNetwork(networkName);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('selectedNetwork', networkName);
+        }
+
+        // Reconnect wallet and reinitialize contract
+        await connectWallet();
+      } catch (switchError: any) {
+        // This error code indicates that the chain has not been added to MetaMask
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [network],
+            });
+
+            // Update the selected network in state and localStorage
+            setSelectedNetwork(networkName);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('selectedNetwork', networkName);
+            }
+
+            // Reconnect wallet and reinitialize contract
+            await connectWallet();
+          } catch (addError) {
+            console.error('Failed to add the network:', addError);
+          }
+        } else {
+          console.error('Failed to switch to the network:', switchError);
+        }
+      }
+    }
+  };
 
   const updateBalance = async (provider: ethers.Provider, account: string) => {
     if (provider && account) {
@@ -49,6 +109,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window.ethereum !== 'undefined') {
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
+
         const provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(provider);
         const signer = await provider.getSigner();
@@ -57,6 +118,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         setSigner(signer);
 
         await updateBalance(provider, address);
+        const contractAddress = CONTRACT_ADDRESSES[selectedNetwork];
+
         const paymentSystem = new ethers.Contract(contractAddress, PaymentSystemABI.abi, signer);
         console.log('🚀 ~ connectWal ~ paymentSystem:', paymentSystem);
 
@@ -151,6 +214,20 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Effect to switch to the saved network on initial load
+  useEffect(() => {
+    const initNetwork = async () => {
+      if (typeof window === 'undefined') return;
+
+      const savedNetwork = localStorage.getItem('selectedNetwork');
+      if (savedNetwork && savedNetwork !== selectedNetwork) {
+        await switchNetwork(savedNetwork);
+      }
+    };
+
+    initNetwork();
+  }, []);
+
   useEffect(() => {
     if (!contract) return;
 
@@ -240,6 +317,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         isOwner,
         collectedFees,
         fetchCollectedFees,
+        selectedNetwork,
+        setSelectedNetwork,
+        switchNetwork,
       }}
     >
       {children}

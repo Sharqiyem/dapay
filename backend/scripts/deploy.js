@@ -12,51 +12,56 @@ async function main() {
     await paymentSystem.waitForDeployment();
     const contractAddress = await paymentSystem.getAddress();
 
-    console.log('PaymentSystem deployed to:', contractAddress);
+    // Get the network name
+    const networkName = hre.network.name;
+
+    console.log(`PaymentSystem deployed to: ${contractAddress} on network: ${networkName}`);
     console.log('Initial fee percentage:', initialFeePercentage / 100, '%');
 
     const frontendContractFile = path.join(__dirname, '../../webapp/constants/contract.ts');
-    console.log('Attempting to update file:', frontendContractFile);
 
     // Read the current content of the file
     let content = await fs.readFile(frontendContractFile, 'utf8');
-    console.log('File content read successfully');
 
-    // Replace the contract address
-    const oldContent = content;
-    content = content.replace(
-      /export const contractAddress = '.*'/,
-      `export const contractAddress = "${contractAddress}"`,
-    );
-    console.log('content', content);
+    // Find the CONTRACT_ADDRESSES object in the content
+    const contractAddressesRegex = /export const CONTRACT_ADDRESSES: \{ \[key: string\]: string \} = {[\s\S]*?};/;
+    const match = content.match(contractAddressesRegex);
 
-    // Add or update the initial fee percentage
-    if (content.includes('export const initialFeePercentage')) {
-      content = content.replace(
-        /export const initialFeePercentage = .*/,
-        `export const initialFeePercentage = ${initialFeePercentage}`,
+    if (!match) {
+      throw new Error('Could not find CONTRACT_ADDRESSES in the file');
+    }
+
+    let updatedAddresses = match[0];
+
+    // Check if the network already exists in the object
+    const networkRegex = new RegExp(`(\\s+${networkName}:\\s*)'[^']+'`, 'g');
+    if (networkRegex.test(updatedAddresses)) {
+      // If the network exists, update its address
+      updatedAddresses = updatedAddresses.replace(networkRegex, `$1'${contractAddress}'`);
+    } else {
+      // If the network doesn't exist, add it to the object
+      updatedAddresses = updatedAddresses.replace(
+        /}\s*;/,
+        `,\n    ${networkName}: '${contractAddress}'\n};`
       );
-    } else {
-      content += `\nexport const initialFeePercentage = ${initialFeePercentage};\n`;
     }
 
-    // Only write to the file if changes were made
-    if (content !== oldContent) {
-      // Write the updated content back to the file
-      console.log('content', content);
+    // Replace the old CONTRACT_ADDRESSES object with the updated one
+    content = content.replace(contractAddressesRegex, updatedAddresses);
 
-      await fs.writeFile(frontendContractFile, content);
-      console.log(`Contract address and initial fee percentage updated in ${frontendContractFile}`);
-    } else {
-      console.log('No changes were necessary in the frontend contract file');
-    }
+    // Write the updated content back to the file
+    await fs.writeFile(frontendContractFile, content);
+
+    console.log(`Contract address updated for network ${networkName} in ${frontendContractFile}`);
 
     // Copy the ABI
     const sourcePath = path.join(__dirname, '../artifacts/contracts');
     const destPath = path.join(__dirname, '../../webapp/constants/artifacts');
 
     await fs.cp(sourcePath, destPath, { recursive: true });
+
     console.log(`Artifacts copied to ${destPath}`);
+
   } catch (error) {
     console.error('An error occurred during deployment or file update:', error);
     process.exitCode = 1;

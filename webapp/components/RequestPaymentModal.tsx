@@ -78,7 +78,7 @@ const RequestPaymentModal: React.FC<RequestPaymentModalProps> = ({ onClose }) =>
       setMessage('');
     } catch (error) {
       console.error('Error requesting payment:', error);
-      alert(`Failed to request payment: ${error.message}`);
+      alert(`Failed to request payment: ${error}`);
     } finally {
       setIsLoading(false);
     }

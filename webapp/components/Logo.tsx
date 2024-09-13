@@ -1,4 +1,4 @@
-const Logo = ({ props }: any) => (
+const Logo = ({ props }: { props?: React.SVGProps<SVGSVGElement> }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={96} height={48} viewBox="0 0 96 48" {...props}>
     <g
       //   transform="translate(0.000000,112.000000) scale(0.100000,-0.100000)"

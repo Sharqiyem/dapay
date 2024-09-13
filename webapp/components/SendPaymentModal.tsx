@@ -79,7 +79,7 @@ const SendPaymentModal: React.FC<SendPaymentModalProps> = ({ onClose }) => {
       setMessage('');
     } catch (error) {
       console.error('Error sending payment:', error);
-      alert(`Failed to send payment: ${error.message}`);
+      alert(`Failed to send payment: ${error}`);
     } finally {
       setIsLoading(false);
     }

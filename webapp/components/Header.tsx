@@ -9,9 +9,10 @@ import { useModal } from '@/contexts/ModalContext';
 import ThemeToggle from './ThemeToggle';
 import Image from 'next/image';
 import logo from '../images/logo4.png';
-import Logo2 from '../images/logo.svg';
+// import Logo2 from '../images/logo.svg';
 import { useWeb3 } from '@/contexts/Web3Context';
 import Logo from './Logo';
+import NetworkSelector from './NetworkSelector';
 
 const Header: React.FC = () => {
   const pathname = usePathname();
@@ -89,6 +90,9 @@ const Header: React.FC = () => {
               <li>
                 <WalletConnect />
               </li>
+              <li>
+                <NetworkSelector />
+              </li>
               {/* <li>
                 <ThemeToggle />
               </li> */}
@@ -155,6 +159,9 @@ const Header: React.FC = () => {
               )}
               <li>
                 <WalletConnect />
+              </li>
+              <li>
+                <NetworkSelector />
               </li>
             </ul>
           </nav>

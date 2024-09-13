@@ -69,7 +69,7 @@ const TransactionCard: React.FC<{
 const TransactionHistory: React.FC = () => {
   const { contract, account } = useWeb3();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filter, setFilter] = useState<'all' | 'sent' | 'received' | 'requests'>('all');
+  const [filter, setFilter] = useState<string | 'all' | 'sent' | 'received' | 'requests'>('all');
 
   const fetchTransactions = async () => {
     if (contract) {
@@ -100,6 +100,7 @@ const TransactionHistory: React.FC = () => {
         contract.off('PaymentRequested', fetchTransactions);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contract]);
 
   const handlePayRequest = async (tx: Transaction) => {
@@ -111,7 +112,7 @@ const TransactionHistory: React.FC = () => {
         // Transactions will be automatically updated by the event listener
       } catch (error) {
         console.error('Error paying request:', error);
-        alert(`Failed to pay request: ${error.message}`);
+        alert(`Failed to pay request: ${error}`);
       }
     }
   };
