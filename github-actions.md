@@ -126,3 +126,8 @@ smart-contract:
 
     - name: Test smart contracts
 ```
+
+"cypress": "cypress open",
+"cypress:headless": "cypress run",
+"test:e2e": "start-server-and-test dev http://localhost:3000 cypress",
+"test:e2e:headless": "start-server-and-test dev http://localhost:3000 cypress:headless"
