@@ -13,7 +13,7 @@ const AccountInfo: React.FC = () => {
   const { openModal } = useModal();
   return (
     <div className="rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">Account Details</h2>
+      <h2 className="text-xl font-semibold mb-2">Account Details</h2>
       <p>
         Address: <span className="truncate max-w-[150px]">{account && formatAddress(account)}</span>
       </p>

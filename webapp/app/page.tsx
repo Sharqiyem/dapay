@@ -18,7 +18,7 @@ const Home: React.FC = () => {
       {account ? (
         <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 space-y-4">
           <div className="space-y-4">
-            <div className=" shadow rounded-lg p-6 space-y-2">
+            <div className=" shadow rounded-lg p-6 space-y-4">
               <AccountInfo />
               {account && <CollectedFees />}
             </div>

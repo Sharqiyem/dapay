@@ -13,7 +13,7 @@ const CollectedFees: React.FC = () => {
 
   return (
     <div className=" rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">Collected Fees</h2>
+      <h2 className="text-xl font-semibold mb-2">Collected Fees</h2>
       <p>
         Total Fees: {collectedFees ? `${collectedFees} ETH` : 'Loading...'}
         <button onClick={fetchCollectedFees} className="pl-4 text-primary rounded">
