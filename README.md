@@ -86,7 +86,6 @@ Networks deployed to:
 
 - Hardhat (local development)
 - Sepolia (testnet)
-- [Add other networks as applicable]
 
 To deploy:
 
@@ -129,8 +128,9 @@ webapp/
 │   ├── components/
 │   │   ├── NetworkSelector.tsx
 │   │   ├── WalletConnect.tsx
-│   │   ├── SendPayment.tsx
-│   │   ├── RequestPayment.tsx
+│   │   ├── SendPaymentModal.tsx
+│   │   ├── RequestPaymentModal.tsx
+│   │   ├── SetUsernameModal.tsx
 │   │   └── TransactionHistory.tsx
 │   ├── contexts/
 │   │   └── Web3Context.tsx
@@ -169,6 +169,10 @@ webapp/
   };
   ```
 
+### 3.6. Theming
+
+The application supports both light and dark themes, providing a comfortable user experience in different lighting conditions and according to user preferences.
+
 ## 4. Setup and Installation
 
 ### 4.1. Prerequisites
@@ -182,7 +186,7 @@ webapp/
 1. Clone the repository
 2. Install backend dependencies:
    ```
-   cd app
+   cd backend
    npm install
    ```
 3. Install frontend dependencies:
@@ -197,7 +201,7 @@ webapp/
 Backend (Hardhat node):
 
 ```
-cd app
+cd backend
 npx hardhat node
 ```
 
@@ -238,15 +242,7 @@ Contract addresses are managed per network and updated automatically by the depl
 Location: `backend/test/PaymentSystem.test.js`
 Run with: `npx hardhat test`
 
-### 6.2. Frontend Tests
-
-[Describe your frontend testing setup and how to run tests]
-
-## 7. Troubleshooting
-
-[List common issues and their solutions]
-
 ## 8. Future Improvements
 
-- [List planned features]
-- [Describe known limitations]
+- Transaction Categories and Tags
+- Transaction History Export
