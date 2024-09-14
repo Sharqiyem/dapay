@@ -11,7 +11,7 @@ import Image from 'next/image';
 import logo from '../images/logo4.png';
 // import Logo2 from '../images/logo.svg';
 import { useWeb3 } from '@/contexts/Web3Context';
-import Logo from './Logo';
+// import Logo from './Logo';
 import NetworkSelector from './NetworkSelector';
 
 const Header: React.FC = () => {
