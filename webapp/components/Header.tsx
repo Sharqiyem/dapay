@@ -36,7 +36,7 @@ const Header: React.FC = () => {
               objectFit="contain"
             />
             {/* <h1 className="text-2xl sm:text-3xl font-bold text-primary/80 cursor-pointer">DaPay</h1> */}
-            <Logo />
+            {/* <Logo /> */}
           </Link>
         </div>
 

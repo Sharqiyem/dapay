@@ -43,7 +43,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [selectedNetwork, setSelectedNetwork] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('selectedNetwork') || 'hardhat';
+      console.log('🚀 ~ selectedNetwork:', Object.keys(NETWORKS)[0]);
+
+      return localStorage.getItem('selectedNetwork') || Object.keys(NETWORKS)[0];
     }
     return Object.keys(NETWORKS)[0];
   });
@@ -226,7 +228,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initNetwork();
-  }, []);
+  }, [selectedNetwork, switchNetwork]);
 
   useEffect(() => {
     if (!contract) return;
