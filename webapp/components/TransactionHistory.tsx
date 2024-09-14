@@ -75,7 +75,11 @@ const TransactionHistory: React.FC = () => {
     if (contract) {
       try {
         const txs = await contract.getTransactions();
-        setTransactions(txs);
+        const copyTxs = [...txs];
+        copyTxs.sort((a: Transaction, b: Transaction) => {
+          return a.timestamp > b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0;
+        });
+        setTransactions(copyTxs);
       } catch (error) {
         console.error('Error fetching transactions:', error);
       }
